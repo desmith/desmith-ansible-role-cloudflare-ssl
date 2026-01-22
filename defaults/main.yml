@@ -6,13 +6,10 @@ ssl_dhparam_size: 2048
 ssl_certificate_validity_days: 365
 
 # Cloudflare AOP Configuration
-ssl_cloudflare_aop_enabled: true
-ssl_cloudflare_cert_source: "aws_secrets"  # aws_secrets, file, url, content
-ssl_cloudflare_cert_secret_name: ""
+#ssl_cloudflare_aop_enabled: true
 ssl_cloudflare_cert_content: ""
-ssl_cloudflare_cert_file: ""
-ssl_cloudflare_cert_url: "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
-
+#ssl_cloudflare_cert_url: "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
+#
 # AWS Configuration
 ssl_aws_region: "us-east-1"
 

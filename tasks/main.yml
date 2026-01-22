@@ -16,15 +16,9 @@
     - /etc/ssl/private
     - /etc/ssl/certs
 
-- name: Retrieve Cloudflare Origin CA certificate from AWS Secrets Manager
-  amazon.aws.secretsmanager_secret:
-    name: "{{ cloudflare_origin_cert_secret_name }}"
-    region: us-east-1
-  register: cloudflare_origin_cert_secret
-
 - name: Save Cloudflare Origin CA certificate
   copy:
-    content: "{{ cloudflare_origin_cert_secret.secret.SecretString }}"
+    content: "{{ ssl_cloudflare_cert_content }}"
     dest: /etc/ssl/cloudflare/origin-pull-ca.pem
     owner: root
     group: root
