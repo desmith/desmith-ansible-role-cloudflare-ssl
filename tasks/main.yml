@@ -16,45 +16,39 @@
     - /etc/ssl/private
     - /etc/ssl/certs
 
-- name: Save Cloudflare Origin CA certificate
-  copy:
-    content: "{{ ssl_cloudflare_cert_content }}"
+# Download CloudFlare Authenticated Origin Pull CA certificate
+# This is a public certificate that validates CloudFlare's client certificate
+- name: Download Cloudflare Authenticated Origin Pull CA certificate
+  get_url:
+    url: "{{ ssl_cloudflare_aop_ca_url }}"
     dest: /etc/ssl/cloudflare/origin-pull-ca.pem
     owner: root
     group: root
     mode: '0644'
+    force: "{{ ssl_cloudflare_aop_ca_force_update | default(false) }}"
   notify: restart nginx
 
-- name: Generate private key for origin server
-  openssl_privatekey:
-    path: /etc/ssl/private/{{ ssl_hostname }}.key
-    size: 2048
+# Option 2: Use existing certificates from variables
+
+- name: Deploy Cloudflare Origin Certificate private key
+  copy:
+    content: "{{ ssl_cloudflare_origin_key_content }}"
+    dest: /etc/ssl/private/{{ ssl_hostname }}.key
     owner: root
     group: root
     mode: '0600'
+  notify: restart nginx
+  when: ssl_cloudflare_origin_key_content is defined and ssl_cloudflare_origin_key_content | length > 0
 
-- name: Generate certificate signing request
-  openssl_csr:
-    path: /etc/ssl/private/{{ ssl_hostname }}.csr
-    privatekey_path: /etc/ssl/private/{{ ssl_hostname }}.key
-    common_name: "{{ ssl_hostname }}"
-    subject_alt_name:
-      - "DNS:{{ ssl_hostname }}"
-      - "DNS:www.{{ ssl_hostname }}"
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: Generate self-signed certificate for origin server
-  openssl_certificate:
-    path: /etc/ssl/certs/{{ ssl_hostname }}.crt
-    privatekey_path: /etc/ssl/private/{{ ssl_hostname }}.key
-    csr_path: /etc/ssl/private/{{ ssl_hostname }}.csr
-    provider: selfsigned
+- name: Deploy Cloudflare Origin Certificate
+  copy:
+    content: "{{ ssl_cloudflare_origin_cert_content }}"
+    dest: /etc/ssl/certs/{{ ssl_hostname }}.crt
     owner: root
     group: root
     mode: '0644'
   notify: restart nginx
+  when: ssl_cloudflare_origin_cert_content is defined and ssl_cloudflare_origin_cert_content | length > 0
 
 - name: Create DH parameters (this may take a while)
   openssl_dhparam:

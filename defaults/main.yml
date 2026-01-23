@@ -1,15 +1,40 @@
 ---
 # SSL Configuration
 ssl_hostname: "{{ inventory_hostname }}"
-ssl_key_size: 2048
-ssl_dhparam_size: 2048
-ssl_certificate_validity_days: 365
 
-# Cloudflare AOP Configuration
-#ssl_cloudflare_aop_enabled: true
-ssl_cloudflare_cert_content: ""
-#ssl_cloudflare_cert_url: "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
-#
+# Certificate Generation Mode
+# Set to true to generate a new certificate via CloudFlare API
+# Set to false to use existing certificates from AWS Secrets Manager
+ssl_generate_certificate: false
+
+# Hostnames to include in the certificate
+ssl_certificate_hostnames:
+  - "{{ ssl_hostname }}"
+  - "www.{{ ssl_hostname }}"
+
+# Certificate validity in days (CloudFlare supports: 7, 30, 90, 365, 730, 1825, 5475)
+ssl_certificate_validity_days: 5475  # 15 years
+
+# CloudFlare API Configuration (required for certificate generation)
+ssl_cloudflare_api_token_secret_name: ""  # AWS Secrets Manager secret name containing CloudFlare API token
+
+# AWS Secrets Manager secret names for storing generated certificates
+cloudflare_origin_cert_secret_name: "{{ project_name }}/{{ ansible_env }}/cloudflare-origin-cert"
+cloudflare_origin_key_secret_name: "{{ project_name }}/{{ ansible_env }}/cloudflare-origin-key"
+ssl_store_in_secrets_manager: true
+
+# Cloudflare Authenticated Origin Pull CA Certificate
+# This is a public certificate downloaded directly from CloudFlare
+# No need to store in Secrets Manager - it's publicly available
+ssl_cloudflare_aop_ca_url: "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem"
+ssl_cloudflare_aop_ca_force_update: false  # Set to true to force re-download
+
+# Cloudflare Origin Certificate (for manual deployment)
+# Generate at: CloudFlare Dashboard → SSL/TLS → Origin Server → Create Certificate
+# These certificates are valid for up to 15 years and are trusted by CloudFlare
+ssl_cloudflare_origin_cert_content: ""
+ssl_cloudflare_origin_key_content: ""
+
 # AWS Configuration
 ssl_aws_region: "us-east-1"
 
@@ -21,13 +46,11 @@ ssl_openssl_package: "openssl"
 ssl_web_server: "nginx"  # nginx, apache, etc.
 ssl_restart_web_server: true
 
-# Certificate Subject Alternative Names
-ssl_subject_alt_names:
-  - "DNS:{{ ssl_hostname }}"
-  - "DNS:www.{{ ssl_hostname }}"
-
 # Directory Configuration
 ssl_base_dir: "/etc/ssl"
 ssl_private_dir: "{{ ssl_base_dir }}/private"
 ssl_certs_dir: "{{ ssl_base_dir }}/certs"
 ssl_cloudflare_dir: "{{ ssl_base_dir }}/cloudflare"
+
+# DH Parameters
+ssl_dhparam_size: 2048
